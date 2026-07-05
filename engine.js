@@ -14,11 +14,44 @@ export default class Engine {
 		this.chess = chessInstance;
 	}
 
+	orderMoves(moves) {
+		moves.sort((a, b) => this.scoreMove(b) - this.scoreMove(a)); // Sort descending
+	}
+
+	scoreMove(move) {
+		let score = 0;
+
+		// 1. Captures (MVV-LVA: Most Valuable Victim - Least Valuable Attacker)
+		if (move.pieceCaptured) {
+			const capturedType = move.pieceCaptured.toLowerCase();
+			const movedType = move.pieceMoved.toLowerCase();
+
+			// We want to highly reward capturing a Queen with a Pawn,
+			// and slightly penalize capturing a Pawn with a Queen.
+			// Multiplying the victim by 10 ensures PxQ is always prioritized over QxQ.
+			score += 10 * PIECE_VALUES[capturedType] - PIECE_VALUES[movedType];
+		}
+
+		// 2. Promotions
+		if (move.isPawnPromotion()) {
+			score += PIECE_VALUES.q; // Heavily favor getting a new Queen
+		}
+
+		// Optional: You could add positional differences here using your PSTs,
+		// but Captures and Promotions provide 90% of the Alpha-Beta optimization.
+
+		return score;
+	}
+
 	getBestMove(depth) {
+		const startTime = performance.now();
+
 		const validMoves = this.chess.getAllValidMoves(this.chess.turn);
 
 		// Failsafe: if no moves, the game is over, engine can't move.
 		if (validMoves.length === 0) return null;
+
+		this.orderMoves(validMoves);
 
 		// Default to the first valid move so we never return null accidentally
 		let bestMove = validMoves[0];
@@ -54,7 +87,15 @@ export default class Engine {
 				}
 			}
 		}
-		return bestMove;
+
+		const endTime = performance.now();
+
+		return {
+			move: bestMove,
+			eval: bestEval,
+			depth: depth,
+			timeMs: Math.round(endTime - startTime),
+		};
 	}
 
 	minimax(depth, alpha, beta, isMaximizingPlayer) {
@@ -81,6 +122,8 @@ export default class Engine {
 			}
 			return 0; // Stalemate is neutral
 		}
+
+        this.orderMoves(moves);
 
 		if (isMaximizingPlayer) {
 			let maxEval = -Infinity;

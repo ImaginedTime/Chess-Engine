@@ -185,6 +185,6 @@ export default class Board {
 
 	closeGameOverModal() {
 		const modal = document.getElementById("game-over-modal");
-        modal.style.display = "hidden";
+        modal.style.display = "none";
 	}
 }

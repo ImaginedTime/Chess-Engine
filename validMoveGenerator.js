@@ -1,4 +1,4 @@
-import { PIECE, TURN } from "./constants.js";
+import { PIECE, TURN } from "./constants.js"; 
 
 const PIECE_MOVE_FUNCTIONS = {
 	[PIECE.WHITE_KING]: MovesOfKing,

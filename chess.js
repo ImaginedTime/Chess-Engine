@@ -13,6 +13,7 @@ import { MoveGen, checkmate, stalemate } from "./validMoveGenerator.js";
 
 import Move from "./move.js";
 import Engine from "./engine.js";
+import UIManager from "./ui.js";
 
 export default class Chess {
 	constructor(fen = START_FEN) {
@@ -31,6 +32,12 @@ export default class Chess {
 
 		// the chess engine attached
 		this.engine = new Engine(this);
+
+		// UI manager for panels
+		this.ui = new UIManager();
+
+		// Show initial evaluation
+		this.updateUIEvaluation();
 
 		this.board.boardDOM.addEventListener("click", (event) => {
 			const rect = this.board.boardDOM.getBoundingClientRect();
@@ -98,6 +105,9 @@ export default class Chess {
 		// add the move to history
 		this.moveHistory.push(move);
 
+		// Add move to the UI move history panel
+		this.ui.addMove(move, this.turn);
+
 		// make the move on the board
 		this.board.updatePosition(x, y, this.board.board[x1][y1]);
 		this.board.updatePosition(x1, y1, PIECE.EMPTY);
@@ -113,6 +123,14 @@ export default class Chess {
 		this.board.highlightLastMove(
 			this.moveHistory[this.moveHistory.length - 1],
 		);
+	}
+
+	/**
+	 * Update the UI evaluation bar using the engine's evaluateBoard method.
+	 */
+	updateUIEvaluation() {
+		const evalScore = this.engine.evaluateBoard();
+		this.ui.updateEvaluation(evalScore);
 	}
 
 	genValidMoves(x, y) {
@@ -221,6 +239,12 @@ export default class Chess {
 	switchTurn() {
 		this.turn = this.turn === TURN.WHITE ? TURN.BLACK : TURN.WHITE;
 
+		// Update the evaluation after the move
+		this.updateUIEvaluation();
+
+		// Update the turn indicator
+		this.ui.updateTurnIndicator(this.turn);
+
 		this.updateGameState();
 
 		switch (this.gameState) {
@@ -237,6 +261,9 @@ export default class Chess {
 
 		// If it's Black's turn, tell the engine to make a move
 		if (this.turn === TURN.BLACK) {
+			// Show thinking indicator
+			this.ui.showThinking();
+
 			// Use setTimeout to allow the DOM to update the human's last move
 			// visually before the heavy engine calculation freezes the thread
 			setTimeout(() => {
@@ -391,15 +418,28 @@ export default class Chess {
 
 	playEngineMove() {
 		// 1. Ask engine for best move (e.g., search depth of 4)
-		const bestMove = this.engine.getBestMove(MAX_DEPTH_FOR_ENGINE);
+		const result = this.engine.getBestMove(MAX_DEPTH_FOR_ENGINE);
 
-		if (!bestMove) return;
+		if (!result) return;
 
-		// 2. Extract coordinates
+		const bestMove = result.move;
+
+		// 2. Update engine stats in the UI (with move notation for timing history)
+		const moveNotation = this.ui.toAlgebraicNotation(bestMove);
+		this.ui.updateEngineStats({
+			depth: result.depth,
+			timeMs: result.timeMs,
+			eval: result.eval,
+		}, moveNotation);
+
+		// 3. Extract coordinates
 		const { from, to, pieceMoved, isEnPassant, isCastling } = bestMove;
 
-		// 3. Update the physical board UI (similar to the bottom half of handleClick)
+		// 4. Update the physical board UI (similar to the bottom half of handleClick)
 		this.moveHistory.push(bestMove);
+
+		// Add engine move to the UI move history panel
+		this.ui.addMove(bestMove, TURN.BLACK);
 
 		this.board.updatePosition(to.x, to.y, pieceMoved);
 		this.board.updatePosition(from.x, from.y, PIECE.EMPTY);
@@ -412,7 +452,7 @@ export default class Chess {
 			this.board.updatePosition(to.x, to.y, PIECE.BLACK_QUEEN);
 		}
 
-		// 4. Highlight and switch back to human
+		// 5. Highlight and switch back to human
 		this.board.highlightLastMove(bestMove);
 		this.switchTurn();
 	}

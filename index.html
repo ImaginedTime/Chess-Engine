@@ -3,12 +3,75 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Chess</title>
+		<title>Chess Engine</title>
+		<meta name="description" content="Chess game with minimax engine, evaluation, and move history" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 		<link rel="stylesheet" href="./styles.css" />
 	</head>
 	<body>
-		<div class="container">
-			<div class="board" id="board"></div>
+		<div class="app-layout">
+			<!-- Left: Engine Info Panel -->
+			<div class="info-panel" id="info-panel">
+				<div class="panel-section eval-section">
+					<div class="section-header">
+						<span>Evaluation</span>
+					</div>
+					<div class="eval-display">
+						<div class="eval-bar-container">
+							<div class="eval-bar-fill" id="eval-bar-fill"></div>
+						</div>
+						<div class="eval-value" id="eval-value">0.00</div>
+					</div>
+					<div class="eval-label" id="eval-label">Equal position</div>
+				</div>
+
+				<div class="panel-section engine-section">
+					<div class="section-header">
+						<span>Engine Stats</span>
+					</div>
+					<div class="stat-row">
+						<span class="stat-label">Search depth</span>
+						<span class="stat-value" id="engine-depth">—</span>
+					</div>
+					<div class="stat-row">
+						<span class="stat-label">Best eval</span>
+						<span class="stat-value" id="engine-eval">—</span>
+					</div>
+					<div class="stat-row">
+						<span class="stat-label">Think time</span>
+						<span class="stat-value" id="engine-time">—</span>
+					</div>
+					<span class="view-all-link" id="view-timing-btn">View all ›</span>
+				</div>
+
+				<div class="panel-section status-section">
+					<div class="turn-indicator" id="turn-indicator">
+						<div class="turn-dot white-dot"></div>
+						<span>White to move</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Center: Board -->
+			<div class="board-wrapper">
+				<div class="container">
+					<div class="board" id="board"></div>
+				</div>
+			</div>
+
+			<!-- Right: Move History Panel -->
+			<div class="moves-panel" id="moves-panel">
+				<div class="panel-section">
+					<div class="section-header">
+						<span>Move History</span>
+					</div>
+					<div class="moves-list" id="moves-list">
+						<div class="moves-placeholder">No moves yet</div>
+					</div>
+				</div>
+			</div>
 		</div>
 
 		<div id="promotion-modal" class="modal">
@@ -19,8 +82,24 @@
 			<div class="game-over-card">
 				<h1 id="game-over-title"></h1>
 				<p id="game-over-subtitle"></p>
+				<div class="game-over-buttons">
+					<button class="btn btn-primary" onclick="location.reload()">New Game</button>
+					<button class="btn btn-secondary" id="view-board-btn">View Board</button>
+				</div>
+			</div>
+		</div>
 
-				<button onclick="location.reload()">New Game</button>
+		<div id="timing-modal" class="timing-modal">
+			<div class="timing-card">
+				<div class="timing-header">
+					<span>Engine Timing Analysis</span>
+					<button class="timing-close" id="timing-close-btn">✕</button>
+				</div>
+				<div class="timing-body">
+					<div class="timing-stats-grid" id="timing-stats-grid"></div>
+					<div class="timing-list-header">All engine moves</div>
+					<div class="timing-list" id="timing-list"></div>
+				</div>
 			</div>
 		</div>
 
