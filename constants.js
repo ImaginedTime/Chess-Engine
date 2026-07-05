@@ -38,6 +38,7 @@ export const PIECE_IMAGE_POSITION = {
 };
 export const SPRITE_SIZE = 45; // size inside SVG
 export const SQUARE_SIZE = 60; // board square size
+export const CHESS_SPRITE = "./Chess_Pieces_Sprite.svg";
 
 export const GAME_STATE = Object.freeze({
 	PLAYING: "PLAYING",

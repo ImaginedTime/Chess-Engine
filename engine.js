@@ -9,7 +9,7 @@ import {
 
 import { kingInCheck } from "./validMoveGenerator.js";
 
-export class Engine {
+export default class Engine {
 	constructor(chessInstance) {
 		this.chess = chessInstance;
 	}
